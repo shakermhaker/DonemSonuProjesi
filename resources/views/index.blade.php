@@ -26,7 +26,11 @@
         [x-cloak] { display: none !important; }
     </style>
 </head>
-<body class="bg-gray-100 dark:bg-darker text-gray-900 dark:text-gray-100 font-sans antialiased min-h-screen transition-colors duration-300">
+<body class="bg-gray-100 dark:bg-darker text-gray-900 dark:text-gray-100 font-sans antialiased min-h-screen transition-colors duration-300"
+      x-data="{ 
+          editModalOpen: false, 
+          editingMovie: { id: null, movie_name: '', release_year: '', rating: 1, image: null } 
+      }">
 
     <!-- Header -->
     <header class="w-full p-4 flex justify-between items-center fixed top-0 z-40 bg-white/80 dark:bg-darker/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
@@ -86,7 +90,15 @@
                 @endphp
 
                 @forelse($movies as $movie)
-                    <div class="bg-white dark:bg-card rounded-xl overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800 transition-transform hover:scale-105">
+                    <div class="bg-white dark:bg-card rounded-xl overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800 transition-transform hover:scale-105 group relative">
+                        <!-- Edit Button -->
+                        <button @click="editingMovie = {{ $movie->toJson() }}; editModalOpen = true" 
+                                class="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 cursor-pointer">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                            </svg>
+                        </button>
+
                         @if($movie->image)
                             <img src="{{ asset('storage/' . $movie->image) }}" alt="{{ $movie->movie_name }}" class="w-full h-64 object-cover">
                         @else
@@ -198,6 +210,77 @@
 
                         <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-xl transition-colors shadow-lg shadow-green-900/20">
                             Add Movie
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Movie Modal -->
+        <div x-show="editModalOpen" x-cloak 
+             class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity">
+            <div class="bg-white dark:bg-card w-full max-w-md rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 relative transform transition-all scale-100"
+                 @click.outside="editModalOpen = false">
+                
+                <!-- Header -->
+                <div class="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-800">
+                    <h2 class="text-xl font-bold">Edit Movie</h2>
+                    <button @click="editModalOpen = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Form -->
+                <div class="p-6">
+                    <form :action="'/movies/' + (editingMovie ? editingMovie.id : '')" method="POST" enctype="multipart/form-data" class="space-y-5">
+                        @csrf
+                        @method('PUT')
+                        
+                        <!-- Movie Name -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Movie Name</label>
+                            <input type="text" name="movie_name" required placeholder="e.g. Inception" x-model="editingMovie.movie_name"
+                                class="w-full bg-gray-50 dark:bg-[#2a2a2a] border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all dark:text-white">
+                        </div>
+
+                        <!-- Release Year -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Release Year</label>
+                            <input type="text" name="release_year" required maxlength="4" placeholder="e.g. 2010" x-model="editingMovie.release_year"
+                                class="w-full bg-gray-50 dark:bg-[#2a2a2a] border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all dark:text-white">
+                        </div>
+
+                        <!-- Rating -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Rating</label>
+                            <div class="flex gap-4">
+                                <template x-for="i in 5">
+                                    <label class="cursor-pointer flex flex-col items-center group">
+                                        <input type="radio" name="rating" :value="i" class="peer sr-only" x-model="editingMovie.rating">
+                                        <div class="w-10 h-10 rounded-full border-2 border-gray-300 dark:border-gray-600 flex items-center justify-center peer-checked:border-indigo-500 peer-checked:bg-indigo-500 peer-checked:text-white text-gray-500 dark:text-gray-400 hover:border-indigo-400 transition-all" x-text="i">
+                                        </div>
+                                    </label>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- Image (Optional) -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cover Image (Optional)</label>
+                            <input type="file" name="image" accept="image/*"
+                                class="block w-full text-sm text-gray-500 dark:text-gray-400
+                                file:mr-4 file:py-2 file:px-4
+                                file:rounded-full file:border-0
+                                file:text-sm file:font-semibold
+                                file:bg-gray-100 dark:file:bg-gray-700 file:text-gray-700 dark:file:text-gray-300
+                                hover:file:bg-gray-200 dark:hover:file:bg-gray-600
+                                cursor-pointer">
+                        </div>
+
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition-colors shadow-lg shadow-indigo-900/20">
+                            Update Movie
                         </button>
                     </form>
                 </div>

@@ -32,4 +32,30 @@ class FavoriteMovieController extends Controller
 
         return redirect('/')->with('success', 'Movie added to your favorites!');
     }
+
+    public function update(Request $request, FavoriteMovie $movie)
+    {
+        if ($movie->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $request->validate([
+            'movie_name' => 'required|string|max:255',
+            'release_year' => 'required|string|max:4',
+            'rating' => 'required|integer|min:1|max:5',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        $data = $request->only(['movie_name', 'release_year', 'rating']);
+
+        if ($request->hasFile('image')) {
+            // Optionally delete the old image here if needed
+            $imagePath = $request->file('image')->store('movies', 'public');
+            $data['image'] = $imagePath;
+        }
+
+        $movie->update($data);
+
+        return redirect('/')->with('success', 'Movie updated successfully!');
+    }
 }
