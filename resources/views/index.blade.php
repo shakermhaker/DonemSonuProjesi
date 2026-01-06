@@ -34,7 +34,7 @@
 
     <!-- Header -->
     <header class="w-full p-4 flex justify-between items-center fixed top-0 z-40 bg-white/80 dark:bg-darker/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
-        <h1 class="text-xl font-bold tracking-tighter">MyMovies</h1>
+        <h1 class="text-xl font-bold tracking-tighter">My Favorite Movies</h1>
 
         <div class="flex items-center gap-4">
             @auth
@@ -91,13 +91,27 @@
 
                 @forelse($movies as $movie)
                     <div class="bg-white dark:bg-card rounded-xl overflow-hidden shadow-lg border border-gray-200 dark:border-gray-800 transition-transform hover:scale-105 group relative">
-                        <!-- Edit Button -->
-                        <button @click="editingMovie = {{ $movie->toJson() }}; editModalOpen = true" 
-                                class="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 cursor-pointer">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                            </svg>
-                        </button>
+                        <!-- Action Buttons -->
+                        <div class="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                            <!-- Edit Button -->
+                            <button @click="editingMovie = {{ $movie->toJson() }}; editModalOpen = true" 
+                                    class="p-2 bg-black/50 hover:bg-black/70 text-white rounded-full cursor-pointer" title="Edit">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                </svg>
+                            </button>
+
+                            <!-- Delete Button -->
+                            <form action="{{ route('movies.destroy', $movie->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this movie?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="p-2 bg-red-600/80 hover:bg-red-700 text-white rounded-full cursor-pointer" title="Delete">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </form>
+                        </div>
 
                         @if($movie->image)
                             <img src="{{ asset('storage/' . $movie->image) }}" alt="{{ $movie->movie_name }}" class="w-full h-64 object-cover">

@@ -58,4 +58,19 @@ class FavoriteMovieController extends Controller
 
         return redirect('/')->with('success', 'Movie updated successfully!');
     }
+
+    public function destroy(FavoriteMovie $movie)
+    {
+        if ($movie->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        if ($movie->image) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($movie->image);
+        }
+
+        $movie->delete();
+
+        return redirect('/')->with('success', 'Movie deleted successfully!');
+    }
 }
